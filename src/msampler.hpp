@@ -39,11 +39,15 @@ public:
   /// @return The probability of sampling i.
   bounded::Unit sample_probability(int i) const;
 
-  Outcome sample() const {
-    int bucket = un();
-    double u = u01();
-    return (u < accept_probs_[bucket]) ? first_choice_[bucket]
-                                       : second_choice_[bucket];
+  /// @brief Get an outcome from two uniformly (U[0,1]) distributed variables.
+  /// @param u0 ~ U[0,1] ; picks the initial sample
+  /// @param u1 ~ U[0,1] ; accepts the first sample, or picks the next
+  /// @return An outcome that, if u0 and u1 are randomly chosen, is sampled from
+  ///         the multinomail distribution.
+  Outcome sample(bounded::Unit u0, bounded::Unit u1) const {
+    int bucket = u0 * no_outcomes();
+    return (u1 <= accept_probs_[bucket]) ? first_choice_[bucket]
+                                         : second_choice_[bucket];
   }
 
 private:
@@ -57,13 +61,4 @@ private:
   std::vector<Outcome> first_choice_;
   /// @brief The alternative outcome we take if we don't accept the first.
   std::vector<Outcome> second_choice_;
-
-  /// @brief  Sample uniformly on [0,1]
-  /// @return x where x ~ U(0,1)
-  double u01() const;
-
-  /// @brief Sample uniformly in [0, 1, ..., n-1] where n is the size of the
-  /// distribution
-  /// @return Uniformly distributed integer between zero and n (n not included).
-  int un() const;
 };

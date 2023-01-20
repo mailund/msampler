@@ -1,6 +1,7 @@
 #include "msampler.hpp"
 
 #include <numeric>
+#include <ranges>
 
 // Need to clean up this function!
 MultinomialSampler::MultinomialSampler(
@@ -47,12 +48,24 @@ MultinomialSampler::MultinomialSampler(
 
   // Now move probability from the large to the small in the
   // second choices
+  // ensure that an uninitialised second choice is not confused with
+  // choosing 0.
+  std::fill(second_choice_.begin(), second_choice_.end(), -1);
   for (int i = 0; i < l; ++i) {
     // small will pick the large as second choice
     second_choice_[i] = first_choice_[l];
     acc[l] -= (1.0 - acc[i]);
     if (acc[l] < 1.0)
       ++l; // l is no longer large, so we move to the next large
+  }
+
+  // Sanity check... some outcomes won't have a second, and they should
+  // have an acceptance probability of 1.0. If they don't, we could
+  // sample an invalid second choice if we reject the first.
+  for (int i = 0; i < n; ++i) {
+    if (second_choice_[i] == -1) {
+      assert(acc[i] == 1.0);
+    }
   }
 
   // Now the acceptance probabilities should be in the range [0,1]
@@ -66,22 +79,9 @@ bounded::Unit MultinomialSampler::sample_probability(int i) const {
   const int n = accept_probs_.size();
 
   for (int j = 0; j < n; j++) {
-    if (first_choice_[j] == i)
-      weight += accept_probs_[j];
-    if (second_choice_[j] == i)
-      weight += 1.0 - accept_probs_[j];
+    weight += (first_choice_[j] == i) * (accept_probs_[j]) +
+              (second_choice_[j] == i) * (1.0 - accept_probs_[j]);
   }
 
   return weight / accept_probs_.size();
-}
-
-// FIXME: the random number generators are just hacks. They are not
-// good enough for a real sampling
-double MultinomialSampler::u01() const {
-  return static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
-}
-
-int MultinomialSampler::un() const {
-  // FIXME: This is *really* skewed if dist is small!
-  return rand() % accept_probs_.size();
 }

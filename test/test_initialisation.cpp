@@ -51,3 +51,57 @@ TEST_CASE("Invalid initialsation", "[init]") {
     REQUIRE_THROWS_AS(MultinomialSampler({0, 0, 0}), std::invalid_argument);
   }
 }
+
+TEST_CASE("Sampling", "[sample]") {
+  SECTION("Test with uniform distribution") {
+
+    MultinomialSampler sampler{1.0 / 3, 1.0 / 3, 1.0 / 3};
+
+    // Test that if we pick the first bucket always, we get
+    // a uniform sample
+    {
+      int samples[] = {0, 0, 0};
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        bounded::Unit u0 = i / 3.0;
+        bounded::Unit u1 = 0.0;
+        samples[sampler.sample(u0, u1)]++;
+      }
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        REQUIRE(samples[i] == 1);
+      }
+    }
+    {
+      int samples[] = {0, 0, 0};
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        bounded::Unit u0 = i / 3.0;
+        bounded::Unit u1 = 0.1;
+        samples[sampler.sample(u0, u1)]++;
+      }
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        REQUIRE(samples[i] == 1);
+      }
+    }
+    {
+      int samples[] = {0, 0, 0};
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        bounded::Unit u0 = i / 3.0;
+        bounded::Unit u1 = 0.9999;
+        samples[sampler.sample(u0, u1)]++;
+      }
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        REQUIRE(samples[i] == 1);
+      }
+    }
+    {
+      int samples[] = {0, 0, 0};
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        bounded::Unit u0 = i / 3.0;
+        bounded::Unit u1 = 1.0;
+        samples[sampler.sample(u0, u1)]++;
+      }
+      for (int i = 0; i < sampler.no_outcomes(); i++) {
+        REQUIRE(samples[i] == 1);
+      }
+    }
+  }
+}
