@@ -1,8 +1,14 @@
 #include "msampler.hpp"
 
-MultinomialSampler::MultinomialSampler(dist weights) : initial_probs_{weights} {
-  if (weights.size() == 0)
+// Need to clean up this function!
+MultinomialSampler::MultinomialSampler(Weights w) {
+  if (w.size() == 0)
     throw std::invalid_argument("Empty weights");
+
+  // FIXME: clean this up
+  for (double p : w) {
+    initial_probs_.push_back(p);
+  }
 
   // Check if the weights are valid
   double sum = 0.0;
@@ -39,7 +45,7 @@ MultinomialSampler::MultinomialSampler(dist weights) : initial_probs_{weights} {
     }
   }
   // Now the neds should have met and l should
-  // point at the first large.
+  // point at the first large (if there are any large).
   assert(l == r);
   assert(l < n ? accept_probs_[l] >= 1 : true);
 
