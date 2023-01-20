@@ -45,7 +45,10 @@ public:
   /// @return An outcome that, if u0 and u1 are randomly chosen, is sampled from
   ///         the multinomail distribution.
   Outcome sample(bounded::Unit u0, bounded::Unit u1) const {
-    int bucket = u0 * no_outcomes();
+    // With zero probability we pick u0 == 1.0, but we can't have]
+    // no_outcomes() -- it is one too high -- so we put that in the
+    // last bucket.
+    int bucket = (u0 < 1.0) ? u0 * no_outcomes() : no_outcomes() - 1;
     return (u1 <= accept_probs_[bucket]) ? first_choice_[bucket]
                                          : second_choice_[bucket];
   }
