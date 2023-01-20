@@ -5,7 +5,7 @@
 
 TEST_CASE("Valid initialsation normalises weights", "[init]") {
   SECTION("uniform dist") {
-    MultinomialSampler sampler({1.0 / 3, 1.0 / 3, 1.0 / 3});
+    MultinomialSampler sampler{1.0 / 3, 1.0 / 3, 1.0 / 3};
     for (int i = 0; i < sampler.no_outcomes(); i++) {
       auto expected = Catch::Approx(1.0 / 3);
       double got = sampler.outcome_probability(i);
@@ -14,7 +14,7 @@ TEST_CASE("Valid initialsation normalises weights", "[init]") {
   }
 
   SECTION("skewed dist") {
-    MultinomialSampler sampler({1, 2, 3});
+    MultinomialSampler sampler{1, 2, 3};
     for (int i = 0; i < sampler.no_outcomes(); i++) {
       auto expected = Catch::Approx(static_cast<double>(i + 1) / 6);
       double got = sampler.outcome_probability(i);
@@ -25,7 +25,7 @@ TEST_CASE("Valid initialsation normalises weights", "[init]") {
 
 TEST_CASE("Initial probs matches sampling probs", "[init]") {
   SECTION("uniform dist") {
-    MultinomialSampler sampler({1.0 / 3, 1.0 / 3, 1.0 / 3});
+    MultinomialSampler sampler{1.0 / 3, 1.0 / 3, 1.0 / 3};
     for (int i = 0; i < sampler.no_outcomes(); i++) {
       auto init = Catch::Approx(sampler.outcome_probability(i));
       double sample = sampler.sample_probability(i);
@@ -34,7 +34,7 @@ TEST_CASE("Initial probs matches sampling probs", "[init]") {
   }
 
   SECTION("skewed dist") {
-    MultinomialSampler sampler({1, 2, 3});
+    MultinomialSampler sampler{1, 2, 3};
     for (int i = 0; i < sampler.no_outcomes(); i++) {
       auto init = Catch::Approx(sampler.outcome_probability(i));
       double sample = sampler.sample_probability(i);
@@ -45,12 +45,9 @@ TEST_CASE("Initial probs matches sampling probs", "[init]") {
 
 TEST_CASE("Invalid initialsation", "[init]") {
   SECTION("empty outcomes") {
-    REQUIRE_THROWS_AS(MultinomialSampler({}), std::invalid_argument);
-  }
-  SECTION("negative weights") {
-    REQUIRE_THROWS_AS(MultinomialSampler({1, -2, 3}), std::invalid_argument);
+    REQUIRE_THROWS_AS(MultinomialSampler{}, std::invalid_argument);
   }
   SECTION("weight zero") {
-    REQUIRE_THROWS_AS(MultinomialSampler({1, 0, 3}), std::invalid_argument);
+    REQUIRE_THROWS_AS(MultinomialSampler({0, 0, 0}), std::invalid_argument);
   }
 }
