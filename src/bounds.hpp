@@ -6,11 +6,6 @@ namespace bounded {
 
 /// @brief Bound floating point numbers to a range
 ///
-/// The use of Range is a hack to get around that we can't use floats
-/// as template parameters. (C++20 does permit it, but clang doesn't
-/// implement it yet).
-///
-/// @tparam Range must specify min_bound and max_bound
 template <typename Range> class Bounded {
   /// @brief Wrapped value
   double val;
@@ -88,42 +83,53 @@ public:
   }
 };
 
-struct Open {};
-struct Closed {};
-
-template <typename Bounds, typename L, typename U> class Range {
-  // Dispatching on boundaries Open/CLose for checking edges
-  template <typename> static bool above(double val);
-  template <typename> static bool below(double val);
-  template <> static constexpr bool above<Open>(double val) {
+/// @brief Specify a range of floats
+/// @tparam Bounds Specifies the lower and upper bound of the range
+///
+/// Using Bounds is a hack to get around that we can't use floats
+/// as template parameters. (C++20 does permit it, but clang doesn't
+/// implement it yet).
+///
+/// @tparam L Determine if the left/lower point is included, `[` or not `(`
+/// @tparam U Determine if the right/upper point is included, `]` or not `)`
+template <typename Bounds, char L, char U> class Range {
+  // Dispatching on whether range endpoints are open `( or )` or closed `[ or ]`
+  template <char> static bool within_bounds(double val);
+  template <> static constexpr bool within_bounds<'('>(double val) {
     return Bounds::lower_bound < val;
   }
-  template <> static constexpr bool above<Closed>(double val) {
+  template <> static constexpr bool within_bounds<'['>(double val) {
     return Bounds::lower_bound <= val;
   }
-  template <> static constexpr bool below<Open>(double val) {
+  template <> static constexpr bool within_bounds<')'>(double val) {
     return val < Bounds::upper_bound;
   }
-  template <> static bool below<Closed>(double val) {
+  template <> static constexpr bool within_bounds<']'>(double val) {
     return val <= Bounds::upper_bound;
   }
 
 public:
-  static bool above_lower(double v) { return above<L>(v); }
-  static bool below_upper(double v) { return below<U>(v); }
-  static bool in_range(double v) { return above_lower(v) && below_upper(v); }
+  static constexpr bool above_lower(double v) { return within_bounds<L>(v); }
+  static constexpr bool below_upper(double v) { return within_bounds<U>(v); }
+  static constexpr bool in_range(double v) {
+    return above_lower(v) && below_upper(v);
+  }
 };
 
-struct NonNegativeBounds : Range<NonNegativeBounds, Closed, Open> {
+/// @brief The range from zero to infinity, \f([0,\infty)\f)
+struct NonNegativeRange : Range<NonNegativeRange, '[', ')'> {
   static constexpr double lower_bound = 0.0;
   static constexpr double upper_bound = std::numeric_limits<double>::infinity();
 };
-using NonNegative = Bounded<NonNegativeBounds>;
+/// @brief Floats constraint to \f([0,\infty)\f)
+using NonNegative = Bounded<NonNegativeRange>;
 
-struct UnitBounds : Range<UnitBounds, Closed, Closed> {
+/// @brief The unit range \f([0,1]\f)
+struct UnitRange : Range<UnitRange, '[', ']'> {
   static constexpr double lower_bound = 0.0;
   static constexpr double upper_bound = 1.0;
 };
-using Unit = Bounded<UnitBounds>;
+/// @brief Floats constrained to \f([0,1]\f)
+using Unit = Bounded<UnitRange>;
 
 } // namespace bounded
