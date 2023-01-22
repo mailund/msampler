@@ -21,6 +21,16 @@ TEST_CASE("Valid initialsation normalises weights", "[init]") {
       REQUIRE(got == expected.margin(0.0001).epsilon(1e-12));
     }
   }
+
+  SECTION("skewed dist reverse") {
+    MultinomialSampler sampler{3, 2, 1};
+    for (int i = 0; i < sampler.no_outcomes(); i++) {
+      auto expected =
+          Catch::Approx(static_cast<double>(sampler.no_outcomes() - i) / 6);
+      double got = sampler.outcome_probability(i);
+      REQUIRE(got == expected.margin(0.0001).epsilon(1e-12));
+    }
+  }
 }
 
 TEST_CASE("Initial probs matches sampling probs", "[init]") {

@@ -17,7 +17,7 @@ template <typename Range> class Bounded {
 
   /// @brief Throw an exception if we get a value outside the permitted range
   void validate() const {
-    if (val < Range::min_bound || Range::max_bound < val)
+    if (!Range::in_range(val))
       throw std::out_of_range(
           "Numerical value is outside of the permitted range");
   }
@@ -88,15 +88,41 @@ public:
   }
 };
 
-struct NonNegativeBounds {
-  static constexpr double min_bound = 0.0;
-  static constexpr double max_bound = std::numeric_limits<double>::max();
+struct Open {};
+struct Closed {};
+
+template <typename Bounds, typename L, typename U> class Range {
+  // Dispatching on boundaries Open/CLose for checking edges
+  template <typename> static bool above(double val);
+  template <typename> static bool below(double val);
+  template <> static constexpr bool above<Open>(double val) {
+    return Bounds::lower_bound < val;
+  }
+  template <> static constexpr bool above<Closed>(double val) {
+    return Bounds::lower_bound <= val;
+  }
+  template <> static constexpr bool below<Open>(double val) {
+    return val < Bounds::upper_bound;
+  }
+  template <> static bool below<Closed>(double val) {
+    return val <= Bounds::upper_bound;
+  }
+
+public:
+  static bool above_lower(double v) { return above<L>(v); }
+  static bool below_upper(double v) { return below<U>(v); }
+  static bool in_range(double v) { return above_lower(v) && below_upper(v); }
+};
+
+struct NonNegativeBounds : Range<NonNegativeBounds, Closed, Open> {
+  static constexpr double lower_bound = 0.0;
+  static constexpr double upper_bound = std::numeric_limits<double>::infinity();
 };
 using NonNegative = Bounded<NonNegativeBounds>;
 
-struct UnitBounds {
-  static constexpr double min_bound = 0.0;
-  static constexpr double max_bound = 1.0;
+struct UnitBounds : Range<UnitBounds, Closed, Closed> {
+  static constexpr double lower_bound = 0.0;
+  static constexpr double upper_bound = 1.0;
 };
 using Unit = Bounded<UnitBounds>;
 
