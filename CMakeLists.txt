@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.25.1)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 project(
     msampler
@@ -16,8 +17,19 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message("Enabling code coverage tracking")
+        include(CodeCoverage)
+        append_coverage_compiler_flags()
+        setup_target_for_coverage_lcov(
+            NAME coverage                 
+            EXECUTABLE ctest -j ${n_cores} # Executable in PROJECT_BINARY_DIR
+        )
+    endif()
     enable_testing()
+    
     add_subdirectory(test)
+
 
     find_package(Doxygen)
     if(Doxygen_FOUND)
