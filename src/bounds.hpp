@@ -120,27 +120,17 @@ public:
 ///
 /// @tparam L Determine if the left/lower point is included, `[` or not `(`
 /// @tparam U Determine if the right/upper point is included, `]` or not `)`
-template <typename Bounds, char L, char U> class Range {
-  // Dispatching on whether range endpoints are open `( or )` or closed `[ or ]`
-  template <char> static bool within_bounds(double val);
-  template <> static constexpr bool within_bounds<'('>(double val) {
-    return Bounds::lower_bound < val;
+template <typename Bounds, char L, char U> struct Range {
+  static constexpr double lower_bound = Bounds::lower_bound;
+  static constexpr double upper_bound = Bounds::upper_bound;
+  static constexpr bool lower_closed = L == '[';
+  static constexpr bool upper_closed = L == '[';
+  static constexpr bool above_lower(double v) {
+    return (L == '[') ? lower_bound <= v : lower_bound < v;
   }
-  template <> static constexpr bool within_bounds<'['>(double val) {
-    return Bounds::lower_bound <= val;
+  static constexpr bool below_upper(double v) {
+    return (U == ']') ? v <= upper_bound : v < upper_bound;
   }
-  template <> static constexpr bool within_bounds<')'>(double val) {
-    return val < Bounds::upper_bound;
-  }
-  template <> static constexpr bool within_bounds<']'>(double val) {
-    return val <= Bounds::upper_bound;
-  }
-
-public:
-  static constexpr double lower_bounds = Bounds::lower_bound;
-  static constexpr double upper_bounds = Bounds::upper_bound;
-  static constexpr bool above_lower(double v) { return within_bounds<L>(v); }
-  static constexpr bool below_upper(double v) { return within_bounds<U>(v); }
   static constexpr bool in_range(double v) {
     return above_lower(v) && below_upper(v);
   }
