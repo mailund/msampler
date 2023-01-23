@@ -20,10 +20,38 @@ template <typename Range> class Bounded {
 public:
   Bounded(double v) : val{v} { validate(); }
   Bounded() = default;
-  Bounded(Bounded &other) = default;
-  Bounded(Bounded &&other) = default;
-  Bounded &operator=(Bounded &other) = default;
-  Bounded &operator=(Bounded &&other) = default;
+
+  template <typename R> Bounded(Bounded<R> &other) : val(other.val) {
+    // FIXME: handle open/close trait
+    static_assert(R::lower_bound <= Range::lower_bound,
+                  "Assigning from a wider to a narrower range");
+    static_assert(R::upper_bound >= Range::upper_bound,
+                  "Assigning from a wider to a narrower range");
+  }
+  template <typename R> Bounded(Bounded<R> &&other) : val(other.val) {
+    // FIXME: handle open/close trait
+    static_assert(R::lower_bound <= Range::lower_bound,
+                  "Assigning from a wider to a narrower range");
+    static_assert(R::upper_bound >= Range::upper_bound,
+                  "Assigning from a wider to a narrower range");
+  }
+
+  template <typename R> Bounded &operator=(Bounded<R> &other) {
+    // FIXME: handle open/close trait
+    static_assert(R::lower_bound <= Range::lower_bound,
+                  "Assigning from a wider to a narrower range");
+    static_assert(R::upper_bound >= Range::upper_bound,
+                  "Assigning from a wider to a narrower range");
+    val = other.val;
+  }
+  template <typename R> Bounded &operator=(Bounded<R> &&other) {
+    // FIXME: handle open/close trait
+    static_assert(R::lower_bound <= Range::lower_bound,
+                  "Assigning from a wider to a narrower range");
+    static_assert(R::upper_bound >= Range::upper_bound,
+                  "Assigning from a wider to a narrower range");
+    val = other.val;
+  }
 
   operator double() const { return val; }
   template <typename R> double operator+(const Bounded<R> &other) const {
@@ -40,7 +68,7 @@ public:
     return *this;
   }
 
-  template <typename R> double operator-(const Bounded &other) const {
+  template <typename R> double operator-(const Bounded<R> &other) const {
     return val - other.val;
   }
   template <typename R> Bounded &operator-=(const Bounded<R> &other) {
@@ -54,7 +82,7 @@ public:
     return *this;
   }
 
-  template <typename R> double operator*(const Bounded &other) const {
+  template <typename R> double operator*(const Bounded<R> &other) const {
     return val * other.val;
   }
   template <typename R> Bounded &operator*=(const Bounded<R> &other) {
@@ -68,7 +96,7 @@ public:
     return *this;
   }
 
-  template <typename R> double operator/(const Bounded &other) const {
+  template <typename R> double operator/(const Bounded<R> &other) const {
     return val / other.val;
   }
   template <typename R> Bounded &operator/=(const Bounded<R> &other) {
@@ -109,6 +137,8 @@ template <typename Bounds, char L, char U> class Range {
   }
 
 public:
+  static constexpr double lower_bounds = Bounds::lower_bound;
+  static constexpr double upper_bounds = Bounds::upper_bound;
   static constexpr bool above_lower(double v) { return within_bounds<L>(v); }
   static constexpr bool below_upper(double v) { return within_bounds<U>(v); }
   static constexpr bool in_range(double v) {
