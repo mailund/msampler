@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <msampler.hpp>
+using namespace range;
 
 TEST_CASE("Valid initialsation normalises weights", "[init]") {
   SECTION("uniform dist") {
@@ -72,8 +73,8 @@ TEST_CASE("Sampling", "[sample]") {
     {
       int samples[] = {0, 0, 0};
       for (int i = 0; i < sampler.no_outcomes(); i++) {
-        bounded::Unit u0 = i / 3.0;
-        bounded::Unit u1 = 0.0;
+        Unit u0 = i / 3.0;
+        Unit u1 = 0.0;
         samples[sampler.sample(u0, u1)]++;
       }
       for (int i = 0; i < sampler.no_outcomes(); i++) {
@@ -83,8 +84,8 @@ TEST_CASE("Sampling", "[sample]") {
     {
       int samples[] = {0, 0, 0};
       for (int i = 0; i < sampler.no_outcomes(); i++) {
-        bounded::Unit u0 = i / 3.0;
-        bounded::Unit u1 = 0.1;
+        Unit u0 = i / 3.0;
+        Unit u1 = 0.1;
         samples[sampler.sample(u0, u1)]++;
       }
       for (int i = 0; i < sampler.no_outcomes(); i++) {
@@ -94,8 +95,8 @@ TEST_CASE("Sampling", "[sample]") {
     {
       int samples[] = {0, 0, 0};
       for (int i = 0; i < sampler.no_outcomes(); i++) {
-        bounded::Unit u0 = i / 3.0;
-        bounded::Unit u1 = 0.9999;
+        Unit u0 = i / 3.0;
+        Unit u1 = 0.9999;
         samples[sampler.sample(u0, u1)]++;
       }
       for (int i = 0; i < sampler.no_outcomes(); i++) {
@@ -105,8 +106,8 @@ TEST_CASE("Sampling", "[sample]") {
     {
       int samples[] = {0, 0, 0};
       for (int i = 0; i < sampler.no_outcomes(); i++) {
-        bounded::Unit u0 = i / 3.0;
-        bounded::Unit u1 = 1.0;
+        Unit u0 = i / 3.0;
+        Unit u1 = 1.0;
         samples[sampler.sample(u0, u1)]++;
       }
       for (int i = 0; i < sampler.no_outcomes(); i++) {

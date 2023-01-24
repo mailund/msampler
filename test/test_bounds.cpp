@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <bounds.hpp>
-using namespace bounded;
+#include <bounded.hpp>
+using namespace range;
 
 TEST_CASE("Constraining numbers", "[bounds]") {
   SECTION("Limited to [0,1]") {

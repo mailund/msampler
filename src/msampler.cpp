@@ -5,7 +5,7 @@
 
 // Need to clean up this function!
 MultinomialSampler::MultinomialSampler(
-    std::initializer_list<bounded::NonNegative> w)
+    std::initializer_list<range::NonNegative> w)
     : initial_probs_(w.size()), accept_probs_(w.size()),
       first_choice_(w.size()), second_choice_(w.size()) {
 
@@ -73,7 +73,7 @@ MultinomialSampler::MultinomialSampler(
   std::copy(acc.begin(), acc.end(), accept_probs_.begin());
 };
 
-bounded::Unit MultinomialSampler::sample_probability(int i) const {
+range::Unit MultinomialSampler::sample_probability(int i) const {
   // Cannot be a probability yet, but will be when we normalise at the end
   double weight = 0.0;
   const int n = accept_probs_.size();
