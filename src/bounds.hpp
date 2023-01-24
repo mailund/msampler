@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+#include <cstddef>
 #include <limits>
 
 namespace bounded {
@@ -107,41 +109,25 @@ public:
     return *this;
   }
 };
-
-template <typename Bounds, bool IsOpen> struct LowerBound {
-  static constexpr double lower_bound = Bounds::lower_bound;
-  static constexpr bool is_open = IsOpen;
-  static constexpr bool in_bounds(double val) {
-    if constexpr (is_open)
-      return lower_bound < val;
-    else
-      return lower_bound <= val;
-  }
-  template <typename Other> static constexpr bool below() {
-    if constexpr (Other::lower_bound < lower_bound)
-      return true;
-    if constexpr (Other::lower_bound == lower_bound)
-      return Other::is_open || !is_open;
-    return false;
-  }
-};
-template <typename Bounds, bool IsOpen> struct UpperBound {
-  static constexpr double upper_bound = Bounds::upper_bound;
-  static constexpr bool is_open = IsOpen;
-  static constexpr bool in_bounds(double val) {
-    if constexpr (is_open)
-      return val < upper_bound;
-    else
-      return val <= upper_bound;
-  }
-  template <typename Other> static constexpr bool above() {
-    if constexpr (Other::upper_bound > upper_bound)
-      return true;
-    if constexpr (Other::upper_bound == upper_bound)
-      return Other::is_open || !is_open;
-    return false;
-  }
-};
+template <typename T>
+concept Bound = requires {
+                  { T::value } -> std::convertible_to<double>;
+                  { T::is_open } -> std::convertible_to<bool>;
+                };
+template <typename T>
+concept LowerBound = requires {
+                       Bound<T>;
+                       { T::below(0.0) } -> std::convertible_to<bool>;
+                       //{ T::template below() } ->
+                       // std::convertible_to<bool>;
+                     };
+template <typename T>
+concept UpperBound = requires {
+                       Bound<T>;
+                       { T::above(0.0) } -> std::convertible_to<bool>;
+                       //{ T::template above() } ->
+                       // std::convertible_to<bool>;
+                     };
 
 /// @brief Specify a range of floats
 /// @tparam Bounds Specifies the lower and upper bound of the range
@@ -152,15 +138,43 @@ template <typename Bounds, bool IsOpen> struct UpperBound {
 ///
 /// @tparam LIsOpen Determine if the left/lower point is open
 /// @tparam RIsOpen Determine if the right/upper point is open
-template <typename Bounds, bool LIsOpen, bool RIsOpen> struct Range {
-  using LowerBound = LowerBound<Bounds, LIsOpen>;
-  using UpperBound = UpperBound<Bounds, RIsOpen>;
+template <typename B, bool LIsOpen, bool RIsOpen> struct Range {
+  struct lower_bound_t {
+    static constexpr double value = B::lower_bound;
+    static constexpr bool is_open = LIsOpen;
+    static constexpr bool below(double val) {
+      return is_open ? value < val : value <= val;
+    }
+    template <Bound Other> static constexpr bool below() {
+      if constexpr (value < Other::value)
+        return true;
+      if constexpr (Other::value == value)
+        return Other::is_open || !is_open;
+      return false;
+    }
+  };
+
+  struct upper_bound_t {
+    static constexpr double value = B::upper_bound;
+    static constexpr bool is_open = RIsOpen;
+    static constexpr bool above(double val) {
+      return is_open ? val < value : val <= value;
+    }
+    template <Bound Other> static constexpr bool above() {
+      if constexpr (value > Other::value)
+        return true;
+      if constexpr (Other::value == value)
+        return Other::is_open || !is_open;
+      return false;
+    }
+  };
+
   static constexpr bool in_range(double v) {
-    return LowerBound::in_bounds(v) && UpperBound::in_bounds(v);
+    return lower_bound_t::below(v) && upper_bound_t::above(v);
   }
   template <typename R> static constexpr bool is_subrange() {
-    return LowerBound::template below<typename R::LowerBound>() &&
-           UpperBound::template above<typename R::UpperBound>();
+    return lower_bound_t::template below<typename R::lower_bound_t>() &&
+           upper_bound_t::template above<typename R::upper_bound_t>();
   }
 };
 
@@ -179,5 +193,4 @@ struct UnitRange : Range<UnitRange, false, false> {
 };
 /// @brief Floats constrained to \f([0,1]\f)
 using Unit = Bounded<UnitRange>;
-
 } // namespace bounded
